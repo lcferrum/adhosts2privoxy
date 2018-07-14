@@ -28,7 +28,7 @@ config_path = "adhosts2privoxy.conf"
 actions_path = "hosts.action"
 
 def SafePrint(ustr):
-	print ustr.encode(sys.stdout.encoding, "replace")
+	print ustr.encode(sys.stdout.encoding or local_encoding, "replace")
 
 def WriteActionPatterns(action_file, domains, pattern):
 	global out_count
@@ -197,7 +197,7 @@ except UnicodeError as e:
 except IOError as e:
 	SafePrint(u"Error while accessing {}: {}".format(e.filename, e.strerror))
 except:
-	SafePrint(u"Unexpected error:", sys.exc_info()[0])
+	SafePrint(u"Unexpected error: {}".format(sys.exc_info()[0]))
 else:
 	exit_code = 0 if no_errors else 1
 
