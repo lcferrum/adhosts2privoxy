@@ -21,6 +21,9 @@ import ConfigParser
 # Except user_agent - this shoud stay str object ("")
 # And dont't forget to specify correct source file encoding
 
+# When current locale encoding can't be determined, fallback_encoding is used
+# So it's actually better to set proper POSIX locale environment variables, instead of changing this default
+
 ignored_hostnames = ["localhost4.localdomain4", "localhost4", "loopback4", "localhost6.localdomain6", "localhost6", "loopback6", "localhost.localdomain", "localhost", "loopback", "ip6-localhost.ip6-localdomain", "ip6-localhost", "ip6-loopback"]
 config_defaults = {"Url": "", "File": "", "Keep": "False", "Encoding": ""}
 user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
