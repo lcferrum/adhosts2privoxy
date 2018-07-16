@@ -13,6 +13,7 @@ import socket
 import urllib
 import httplib
 import urllib2
+import datetime
 import urlparse
 import ConfigParser
 
@@ -26,6 +27,7 @@ user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 privoxy_action = "{+block{Blocked ad hostname.} +handle-as-image +set-image-blocker{blank}}"
 config_path = "adhosts2privoxy.conf"
 actions_path = "hosts.action"
+fallback_encoding = "ascii"
 
 def SafePrint(ustr):
 	print ustr.encode(sys.stdout.encoding or local_encoding, "replace")
@@ -72,7 +74,7 @@ def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 					hosts_match = encoding_pattern.match(cd_params["filename*"])
 					if hosts_match: hosts_path = urllib.unquote(hosts_match.group(2)).decode(hosts_match.group(1))
 				elif "filename" in cd_params:
-					hosts_path = cd_params["filename"].decode("us-ascii")
+					hosts_path = cd_params["filename"].decode("ascii")
 			if not hosts_path:
 				hosts_path = urlparse.urlparse(url).path.strip("/").split("/")[-1] or urlparse.urlparse(url).hostname
 			else:
@@ -82,7 +84,7 @@ def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 			if "Content-Type" in resp.info():
 				ct_value, ct_params = cgi.parse_header(resp.info().getheader("Content-Type"))
 				if "charset" in ct_params: 
-					hosts_encoding = ct_params["charset"].decode("us-ascii")
+					hosts_encoding = ct_params["charset"].decode("ascii")
 
 		with open(hosts_path, "wb") as hosts:
 			hosts.write(resp.read())
@@ -90,7 +92,7 @@ def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 
 	if not hosts_encoding: hosts_encoding = local_encoding
 			
-	SafePrint(u"Processing {}{}...".format(section, "" if local_encoding.lower() == hosts_encoding.lower() else u" ({})".format(hosts_encoding.lower())))
+	SafePrint(u"Processing {}{}...".format(section, "" if codecs.lookup(local_encoding).name == codecs.lookup(hosts_encoding).name else u" ({})".format(codecs.lookup(hosts_encoding).name)))
 	
 	with codecs.open(hosts_path, "r", hosts_encoding) as hosts:
 		prc_count = 0
@@ -131,8 +133,11 @@ def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 	if not keep: os.remove(hosts_path)
 	
 	return True
+	
+def GetTimestamp(dt):
+	return "{0} {1.day: >2} {1:%H:%M:%S %Y}".format(rfc3164_months[dt.month - 1], dt)
 
-local_encoding = locale.getdefaultlocale()[1] or "ascii"
+local_encoding = locale.getdefaultlocale()[1] or fallback_encoding
 
 if len(sys.argv) == 1 and not os.path.isfile(config_path):
 	SafePrint(u"Usage: {} [CONFIG [ACTION_FILE [HOSTS_DIR]]]".format(sys.argv[0]))
@@ -144,12 +149,16 @@ if len(sys.argv) == 1 and not os.path.isfile(config_path):
 block_pattern = re.compile("^\s*(0\.0\.0\.0|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|::1|::)\s+([\w\s.-]+)#?", re.UNICODE)
 white_pattern = re.compile("^\s*#.*$|^\s*$")
 encoding_pattern = re.compile("^([^']+)'[\w-]*'(.+)")
+rfc3164_months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 config = ConfigParser.ConfigParser(config_defaults)
+dt_now = datetime.datetime.now()
 domain_tree = dict()
 in_count = 0
 out_count = 0
-no_errors = False
+no_errors = True
 exit_code = 1
+
+SafePrint(u"Started on {}".format(GetTimestamp(dt_now)))
 
 try:
 	if len(sys.argv) > 1: config_path = sys.argv[1].decode(local_encoding)
@@ -158,35 +167,40 @@ try:
 	with codecs.open(config_path, "r", local_encoding) as config_file:
 		config.readfp(config_file)
 		with codecs.open(actions_path, "w", local_encoding) as action_file:
+			action_file.write(u"# Action file created on {}".format(GetTimestamp(dt_now)) + os.linesep)
+			action_file.write(u"# Included hosts files:" + os.linesep)
+					
 			if len(sys.argv) > 3:
 				hosts_dir = sys.argv[3].decode(local_encoding)
 				if not os.path.isdir(hosts_dir): raise IOError(errno.ENOENT, "The directory name is invalid", hosts_dir)
 				os.chdir(hosts_dir)
 
-			if config.sections():
-				for section in config.sections():
-					try:
-						no_errors = ProcessHostsFile(domain_tree, section, config.get(section, "Url"), config.get(section, "File"), config.getboolean(section, "Keep"), config.get(section, "Encoding"))
-					except UnicodeError as e:
-						SafePrint(u"Codec error ({}): {}".format(e.encoding, e.message or e.reason))
-					except urllib2.HTTPError as e:
-						SafePrint(u"Failed to download {}, HTTP error: {} ({})".format(config.get(section, "Url"), e.code, e.reason))
-					except urllib2.URLError as e:
-						SafePrint(u"Failed to download {}, server is not reachable: {}".format(config.get(section, "Url"), e.reason))
-					except httplib.HTTPException as e:
-						SafePrint(u"Failed to download {}: {}".format(config.get(section, "Url"), e.message))
-					except socket.timeout:
-						SafePrint(u"Failed to download {}, timeout exceeded".format(config.get(section, "Url")))
-					except socket.error as e:
-						SafePrint(u"Failed to download {}: {}".format(config.get(section, "Url"), e.strerror))
-					except IOError as e:
-						SafePrint(u"Error while accessing {}: {}".format(e.filename, e.strerror))
-					except ValueError as e:
-						SafePrint(u"Processing error: {}".format(e.message))
-			else:
-				no_errors = True
+			for section in config.sections():
+				action_file.write(u"#    {}".format(config.get(section, "Url") or config.get(section, "File")) + os.linesep)
+				try:
+					ProcessHostsFile(domain_tree, section, config.get(section, "Url"), config.get(section, "File"), config.getboolean(section, "Keep"), config.get(section, "Encoding"))
+				except UnicodeError as e:
+					SafePrint(u"Codec error ({}): {}".format(e.encoding, e.message or e.reason))
+				except urllib2.HTTPError as e:
+					SafePrint(u"Failed to download {}, HTTP error: {} ({})".format(config.get(section, "Url"), e.code, e.reason))
+				except urllib2.URLError as e:
+					SafePrint(u"Failed to download {}, server is not reachable: {}".format(config.get(section, "Url"), e.reason))
+				except httplib.HTTPException as e:
+					SafePrint(u"Failed to download {}: {}".format(config.get(section, "Url"), e.message))
+				except socket.timeout:
+					SafePrint(u"Failed to download {}, timeout exceeded".format(config.get(section, "Url")))
+				except socket.error as e:
+					SafePrint(u"Failed to download {}: {}".format(config.get(section, "Url"), e.strerror))
+				except IOError as e:
+					SafePrint(u"Error while accessing {}: {}".format(e.filename, e.strerror))
+				except ValueError as e:
+					SafePrint(u"Processing error: {}".format(e.message))
+				else:
+					continue
+				no_errors = False
 
 			SafePrint(u"Writing action file {}...".format(actions_path))
+			action_file.write(os.linesep)
 			action_file.write(privoxy_action + os.linesep)
 			WriteActionPatterns(action_file, domain_tree, "")
 			SafePrint(u"Done!")
