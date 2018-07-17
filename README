@@ -31,12 +31,14 @@ On Windows:
 
 CONFIG is a relative (to current dir) or absolute path to config file
 containing list of input hosts files (default: 'adhosts2privoxy.conf'). More on
-config file in next section. ACTION_FILE is a relative (to current dir) or
-absolute path to resulting Privoxy action file (default: 'hosts.action').
-HOSTS_DIR is a relative (to current dir) or absolute path to directory where
-hosts files are located or will be downloaded (defaults to current directory).
-You can specify absolute path for each hosts file in config - in this case,
-HOSTS_DIR is ignored for such files.
+config file in next section. Config file should have the same encoding as
+current locale one. ACTION_FILE is a relative (to current dir) or absolute path
+to resulting Privoxy action file (default: 'hosts.action'). Action file will be
+written using current locale encoding. HOSTS_DIR is a relative (to current dir)
+or absolute path to directory where hosts files are located or will be
+downloaded to (defaults to current directory). You can specify absolute path
+for each hosts file in config - in this case, HOSTS_DIR is ignored for such
+files.
 
 Built-in download functionality is good enough for most hosted hosts files on
 the web. It takes in account Content-Disposition and Content-Type headers,
@@ -45,23 +47,26 @@ path for hosts file in config, instead of URL, if you don't need to download
 anything or prefer to rely on external download utilities such Wget or Curl.
 
 When hosts file is processed by the script, it's hostnames (and aliases) become
-patterns for 'block' action in Provoxy action file. Multiple hostnames are
-collapsed in single pattern if their higher level domains are equal. For
-example, consider this hosts file:
+patterns for 'block' action in Privoxy action file. Multiple hostnames are
+collapsed in single pattern if there is a hostname that acts as high level
+domain for all of them. For example, consider this hosts file:
 
 	0.0.0.0 ads.foo.bar virii.foo.bar
 	0.0.0.0 foo.bar
 	0.0.0.0 more.ads.foo.bar
+	0.0.0.0 ad1.foo.baz ad2.foo.baz
 
-After processing it, we get this action file:
+After processing it, resulting action file is similar to this:
 
 	{+block}
 	.foo.bar
+	.ad1.foo.baz
+	.ad2.foo.baz
 
 Script algorithm skips malformed hosts entries or entries with "non-blocking"
-IPs. Only following IPs are cosidered "blocking": 127.0.0.0/8 (whole /8
-network), 0.0.0.0, ::1, ::. Also, typical "loopback" and "localhost" hostnames
-are ignored.
+IPs. Only following IPs are cosidered "blocking": whole 127.0.0.0/8 network
+(incl. 127.0.0.1), 0.0.0.0, ::1, ::. Also, typical "loopback" and "localhost"
+hostnames are ignored.
 
 Some of the defaults and pre-defined values, mentioned in this section, can be
 easily changed in the script source code - they are all initialized in the very
