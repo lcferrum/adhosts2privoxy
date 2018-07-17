@@ -67,7 +67,7 @@ def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 		req = urllib2.Request(quoted_url, headers={"Accept": "*/*", "User-Agent": user_agent})
 		resp = urllib2.urlopen(req, timeout=300)
 		
-		# In RFC 2183 it is stated that Content-Disposition filenames can only be encoded in US-ASCII codepage, and non-US-ASCII characters encoded as specified in RFC 2184
+		# In RFC 2183 it is stated that Content-Disposition filenames can only be encoded in ASCII codepage, and non-ASCII characters encoded as specified in RFC 2184
 		# RFC 2184 is obsoleted by RFC 2231, which is also complemented by RFC 5987 that finally describes it's usage in HTTP headers
 
 		if not hosts_path:
@@ -134,8 +134,6 @@ def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 		SafePrint(u"Completed: {} lines processed, {} lines skipped, {} hostnames, {} aliases, {} ignored".format(prc_count, skp_count, hst_count, als_count, ign_count))
 		
 	if not keep: os.remove(hosts_path)
-	
-	return True
 	
 def GetTimestamp(dt):
 	return "{0} {1.day: >2} {1:%H:%M:%S %Y}".format(rfc3164_months[dt.month - 1], dt)
