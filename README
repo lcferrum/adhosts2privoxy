@@ -20,15 +20,15 @@ needed hosts files via config file.
 Main project homepage is at GitHub:
 
 	https://github.com/lcferrum/adhosts2privoxy
-	
+
 4. Usage
---------      
-On Linux/Mac: 
-       adhosts2privoxy.py [CONFIG [ACTION_FILE [HOSTS_DIR]]]
+--------
+On Linux/Mac:
+       ./adhosts2privoxy.py [CONFIG [ACTION_FILE [HOSTS_DIR]]]
 
 On Windows:
        python adhosts2privoxy.py [CONFIG [ACTION_FILE [HOSTS_DIR]]]
-	   
+
 CONFIG is a relative (to current dir) or absolute path to config file
 containing list of input hosts files (default: 'adhosts2privoxy.conf'). More on
 config file in next section. ACTION_FILE is is a relative (to current dir) or
@@ -52,12 +52,12 @@ example, consider this hosts file:
 	0.0.0.0 ads.foo.bar virii.foo.bar
 	0.0.0.0 foo.bar
 	0.0.0.0 more.ads.foo.bar
-	
+
 After processing it, we get this action file:
 
 	{+block}
 	.foo.bar
-	
+
 Script algorithm skips malformed hosts entries or entries with "non-blocking"
 IPs. Only following IPs are cosidered "blocking": 127.0.0.0/8 (whole /8
 network), 0.0.0.0, ::1, ::. Also, typical "loopback" and "localhost" hostnames
