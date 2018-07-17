@@ -31,7 +31,7 @@ On Windows:
 
 CONFIG is a relative (to current dir) or absolute path to config file
 containing list of input hosts files (default: 'adhosts2privoxy.conf'). More on
-config file in next section. ACTION_FILE is is a relative (to current dir) or
+config file in next section. ACTION_FILE is a relative (to current dir) or
 absolute path to resulting Privoxy action file (default: 'hosts.action').
 HOSTS_DIR is a relative (to current dir) or absolute path to directory where
 hosts files are located or will be downloaded (defaults to current directory).
@@ -64,7 +64,7 @@ network), 0.0.0.0, ::1, ::. Also, typical "loopback" and "localhost" hostnames
 are ignored.
 
 Some of the defaults and pre-defined values, mentioned in this section, can be
-easily changed in script source code - they are all initialized in the very
+easily changed in the script source code - they are all initialized in the very
 beginning of the script, hard to miss. Refer to the source code for more
 information on modifying defaults.
 
