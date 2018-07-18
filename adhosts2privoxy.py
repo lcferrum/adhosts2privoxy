@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# Requires Python 2.x
-
 import re
 import os
 import cgi
