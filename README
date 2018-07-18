@@ -58,7 +58,7 @@ domain for all of them. For example, consider this hosts file:
 
 After processing it, resulting action file is similar to this:
 
-	{+block}
+	{+block{Blocked hostname.}}
 	.foo.bar
 	.ad1.foo.baz
 	.ad2.foo.baz

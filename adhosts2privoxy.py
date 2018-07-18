@@ -25,7 +25,7 @@ import ConfigParser
 ignored_hostnames = ["localhost4.localdomain4", "localhost4", "loopback4", "localhost6.localdomain6", "localhost6", "loopback6", "localhost.localdomain", "localhost", "loopback", "ip6-localhost.ip6-localdomain", "ip6-localhost", "ip6-loopback"]
 config_defaults = {"Url": "", "File": "", "Keep": "False", "Encoding": ""}
 user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-privoxy_action = "{+block{Blocked ad hostname.} +handle-as-image +set-image-blocker{blank}}"
+privoxy_action = "{+block{Blocked advertisement hostname.} +handle-as-image +set-image-blocker{blank}}"
 config_path = "adhosts2privoxy.conf"
 actions_path = "hosts.action"
 fallback_encoding = "ascii"
