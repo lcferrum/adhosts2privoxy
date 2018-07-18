@@ -88,30 +88,36 @@ file to be processed. Section starts with '[NAME]' header and followed by
 	Encoding=UTF-8
 	
 Section name is a display name of hosts file to be processed. It will be used
-in script output. In this example, section name is 'Ad Hosts'. 'Url' variable
-holds a web address of hosts file. In this example, hosts file will be
-downloaded from 'http://foo.bar/adhosts.txt'. 'Url' variable is optional - if
-it is omitted, local hosts file will be processed and 'File' variable should be
-set accordingly. 'File' variable contains path where downloaded file will be
-saved or, in case of 'Url' is omitted, path to locally stored hosts file.
-'File' variable is optional only when 'Url' is provided: in absebse of 'File'
-variable, hosts filename will be deduced from Content-Disposition header or web
-address itself. 'File' contains relative or absolute path. Relative paths (this
-includes automatically deduced filenames of downloaded hosts files) are
-calculated relative to directory specified in HOSTS_DIR script parameter (which
-is current directory by default). In this example, downloaded hosts file will
-be saved in current directory under filename 'hosts'. By default, after script
-finishes processing hosts file, it deletes it. To control this behaviour 'Keep'
-variable is used - if it translates to True (values '1', 'yes', 'true' and
-'on'), file won't be deleted after being processed. If it translates to False
-(values '0', 'no', 'false' and 'off') or variable is omitted - default action
-takes place and file becomes deleted. In this example, hosts file won't be
-deleted after being processed. Hosts files can have wide variety of encodings.
-So, when reading hosts file, script uses encoding specified in Content-Type
-header or in current locale, if Content-Type encoding is not availabe or when
-hosts file is stored locally. Automatically selected hosts file encoding can be
-overridden with 'Encoding' variable. In this example, downloaded hosts file
-will be read using 'UTF-8' encoding.
+in script output. In this example, section name is 'Ad Hosts'. 
+
+'Url' variable holds a web address of hosts file. In this example, hosts file
+will be downloaded from 'http://foo.bar/adhosts.txt'. 'Url' variable is
+optional - if it is omitted, local hosts file will be processed and 'File'
+variable should be set accordingly.
+
+'File' variable contains path where downloaded file will be saved or, in case
+of 'Url' is omitted, path to locally stored hosts file. 'File' variable is
+optional only when 'Url' is provided: in absebse of 'File' variable, hosts
+filename will be deduced from Content-Disposition header or web address itself.
+'File' contains relative or absolute path. Relative paths (this includes
+automatically deduced filenames of downloaded hosts files) are calculated
+relative to directory specified in HOSTS_DIR script parameter (which is current
+directory by default). In this example, downloaded hosts file will be saved in
+current directory under filename 'hosts'. 
+
+By default, after script finishes processing hosts file, it deletes it. To
+control this behaviour 'Keep' variable is used - if it translates to True
+(values '1', 'yes', 'true' and 'on'), file won't be deleted after being
+processed. If it translates to False (values '0', 'no', 'false' and 'off') or
+variable is omitted - default action takes place and file becomes deleted. In
+this example, hosts file won't be deleted after being processed.
+
+Hosts files can have wide variety of encodings. So, when reading hosts file,
+script uses encoding specified in Content-Type header or in current locale, if
+Content-Type encoding is not availabe or when hosts file is stored locally.
+Automatically selected hosts file encoding can be overridden with 'Encoding'
+variable. In this example, downloaded hosts file will be read using 'UTF-8'
+encoding.
 
 6. Usage example
 ----------------
