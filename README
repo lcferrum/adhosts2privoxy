@@ -90,10 +90,10 @@ file to be processed. Section starts with '[NAME]' header and followed by
 Section name is a display name of hosts file to be processed. It will be used
 in script output. In this example, section name is 'Ad Hosts'. 
 
-'Url' variable holds a web address of hosts file. In this example, hosts file
-will be downloaded from 'http://foo.bar/adhosts.txt'. 'Url' variable is
-optional - if it is omitted, local hosts file will be processed and 'File'
-variable should be set accordingly.
+'Url' variable holds a web address of hosts file. 'Url' variable is optional
+and, if it is omitted, local hosts file will be processed and 'File' variable
+should be set accordingly. In this example, hosts file will be downloaded from
+'http://foo.bar/adhosts.txt'.
 
 'File' variable contains path where downloaded file will be saved or, in case
 of 'Url' is omitted, path to locally stored hosts file. 'File' variable is
