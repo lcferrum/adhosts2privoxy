@@ -123,6 +123,7 @@ this:
 
 	[First File]
 	Url=http://foo.bar/hosts1.txt
+	
 	[Second File]
 	Url=http://foo.baz/hosts2.txt
 	
