@@ -32,8 +32,8 @@ On Windows:
 CONFIG is a relative (to current dir) or absolute path to config file
 containing list of input hosts files (default: 'adhosts2privoxy.conf'). More on
 config file in next section. Config file should have the same encoding as
-current locale one. ACTION_FILE is a relative (to current dir) or absolute path
-to resulting Privoxy action file (default: 'hosts.action'). Action file will be
+current locale. ACTION_FILE is a relative (to current dir) or absolute path to
+resulting Privoxy action file (default: 'hosts.action'). Action file will be
 written using current locale encoding. HOSTS_DIR is a relative (to current dir)
 or absolute path to directory where hosts files are located or will be
 downloaded to (defaults to current directory). You can specify absolute path
@@ -44,7 +44,7 @@ Built-in download functionality is good enough for most hosted hosts files on
 the web. It takes in account Content-Disposition and Content-Type headers,
 supports Internationalized Domain Names. But you can always specify local file
 path for hosts file in config, instead of URL, if you don't need to download
-anything or prefer to rely on external download utilities such Wget or Curl.
+anything or prefer to rely on external download utilities such as Wget or Curl.
 
 When hosts file is processed by the script, it's hostnames (and aliases) become
 patterns for 'block' action in Privoxy action file. Multiple hostnames are
@@ -64,19 +64,19 @@ After processing it, resulting action file is similar to this:
 	.ad2.foo.baz
 
 Script algorithm skips malformed hosts entries or entries with "non-blocking"
-IPs. Only following IPs are cosidered "blocking": whole 127.0.0.0/8 network
+IPs. Only following IPs are considered "blocking": whole 127.0.0.0/8 network
 (incl. 127.0.0.1), 0.0.0.0, ::1, ::. Also, typical "loopback" and "localhost"
 hostnames are ignored.
 
-Some of the defaults and pre-defined values, mentioned in this section, can be
+Some of the defaults and predefined values, mentioned in this section, can be
 easily changed in the script source code - they are all initialized in the very
 beginning of the script, hard to miss. Refer to the source code for more
 information on modifying defaults.
 
 5. Configuration file
 ---------------------
-Configuration file consists of any number sections, each corresponding to hosts
-file to be processed. Section starts with '[NAME]' header and followed by
+Configuration file consists of any number of sections, each corresponding to
+hosts file to be processed. Section starts with '[NAME]' header and followed by
 'VARIABLE: VALUE' or 'VARIABLE=VALUE' entries. Comment lines start with '#' or
 ';', inline comments start with ';'. Possible VARIABLEs are: 'Url', 'File',
 'Keep' and 'Encoding'. Example config file:
@@ -96,8 +96,8 @@ should be set accordingly. In this example, hosts file will be downloaded from
 'http://foo.bar/adhosts.txt'.
 
 'File' variable contains path where downloaded file will be saved or, in case
-of 'Url' is omitted, path to locally stored hosts file. 'File' variable is
-optional only when 'Url' is provided: in absebse of 'File' variable, hosts
+if 'Url' is omitted, path to locally stored hosts file. 'File' variable is
+optional only when 'Url' is provided: in absence of 'File' variable, hosts
 filename will be deduced from Content-Disposition header or web address itself.
 'File' contains relative or absolute path. Relative paths (this includes
 automatically deduced filenames of downloaded hosts files) are calculated
@@ -106,7 +106,7 @@ directory by default). In this example, downloaded hosts file will be saved in
 current directory under filename 'hosts'. 
 
 By default, after script finishes processing hosts file, it deletes it. To
-control this behaviour 'Keep' variable is used - if it translates to True
+control this behavior 'Keep' variable is used - if it translates to True
 (values '1', 'yes', 'true' and 'on'), file won't be deleted after being
 processed. If it translates to False (values '0', 'no', 'false' and 'off') or
 variable is omitted - default action takes place and file becomes deleted. In
@@ -114,7 +114,7 @@ this example, hosts file won't be deleted after being processed.
 
 Hosts files can have wide variety of encodings. So, when reading hosts file,
 script uses encoding specified in Content-Type header or in current locale, if
-Content-Type encoding is not availabe or when hosts file is stored locally.
+Content-Type encoding is not available or when hosts file is stored locally.
 Automatically selected hosts file encoding can be overridden with 'Encoding'
 variable. In this example, downloaded hosts file will be read using 'UTF-8'
 encoding.
