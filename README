@@ -31,7 +31,7 @@ On Windows:
 
 CONFIG is a relative (to current dir) or absolute path to config file
 containing list of input hosts files (default: 'adhosts2privoxy.conf'). More on
-config file in next section. Config file should have the same encoding as
+config file in the next section. Config file should have the same encoding as
 current locale. ACTION_FILE is a relative (to current dir) or absolute path to
 resulting Privoxy action file (default: 'hosts.action'). Action file will be
 written using current locale encoding. HOSTS_DIR is a relative (to current dir)
