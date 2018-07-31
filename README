@@ -107,10 +107,11 @@ current directory under filename 'hosts'.
 
 By default, after script finishes processing hosts file, it deletes it. To
 control this behavior 'Keep' variable is used - if it translates to True
-(values '1', 'yes', 'true' and 'on'), file won't be deleted after being
-processed. If it translates to False (values '0', 'no', 'false' and 'off') or
-variable is omitted - default action takes place and file becomes deleted. In
-this example, hosts file won't be deleted after being processed.
+(values 'yes', 'true', 'on' and non-zero decimals), file won't be deleted after
+being processed. If it translates to False (values 'no', 'false', 'off' and
+zero equivalents) or variable is omitted - default action takes place and file
+becomes deleted. In this example, hosts file won't be deleted after being
+processed.
 
 Hosts files can have wide variety of encodings. So, when reading hosts file,
 script uses encoding specified in Content-Type header or in current locale, if

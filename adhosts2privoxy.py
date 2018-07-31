@@ -16,8 +16,8 @@ import urlparse
 import ConfigParser
 
 # Keep in mind, if you use non-ASCII characters in defaults, you should change their object type from str ("") to unicode (u"") one
-# Except user_agent - this shoud stay str object ("")
-# And dont't forget to specify correct source file encoding
+# Except user_agent - this should stay str object ("")
+# And don't forget to specify correct source file encoding
 
 # When current locale encoding can't be determined, fallback_encoding is used
 # So it's actually better to set proper POSIX locale environment variables, instead of changing this default
@@ -49,7 +49,7 @@ def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 	hosts_encoding = encoding
 
 	if url:
-		SafePrint(u"Dowloading {}...".format(section))
+		SafePrint(u"Downloading {}...".format(section))
 		
 		# Reasons behind converting back and forth to UTF-8:
 		#   urllib2.quote and urllib.quote_plus choke on non-ASCII characters in unicode objects (any kind of str objects are ok)
@@ -104,7 +104,7 @@ def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 		for line in hosts.readlines():
 			if not re.match(white_pattern, line):
 				line_match = block_pattern.match(line)
-				line_items = line_match and line_match.group(2) is not None and line_match.group(2).strip().split()
+				line_items = line_match and line_match.group(4) is not None and line_match.group(4).strip().split()
 				if line_items:
 					prc_count += 1
 					for alias, hostname in enumerate(line_items):
@@ -133,6 +133,12 @@ def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 		
 	if not keep: os.remove(hosts_path)
 	
+def GetConfigBoolean(config, section, option):
+	try:
+		return bool(config.getfloat(section, option))
+	except ValueError:
+		return config.getboolean(section, option)
+	
 def GetTimestamp(dt):
 	return "{0} {1.day: >2} {1:%H:%M:%S %Y}".format(rfc3164_months[dt.month - 1], dt)
 
@@ -145,7 +151,9 @@ if len(sys.argv) == 1 and not os.path.isfile(config_path):
 	SafePrint(u"Licensed under BSD 2-Clause License");
 	exit(1)
 
-block_pattern = re.compile("^\s*(0\.0\.0\.0|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|::1|::)\s+([\w\s.-]+)#?", re.UNICODE)
+# Block pattern conforms (in a sane way) to RFC 4291 and ID draft-main-ipaddr-text-rep-02
+	
+block_pattern = re.compile("^\s*(0+\.0+\.0+\.0+|127\.\d+\.\d+\.\d+|(0{0,4}:){1,7}(0{0,4}|0{0,3}1))\s+([\w\s.-]+)#?", re.UNICODE)
 white_pattern = re.compile("^\s*#.*$|^\s*$")
 encoding_pattern = re.compile("^([^']+)'[\w-]*'(.+)")
 rfc3164_months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -177,7 +185,7 @@ try:
 			for section in config.sections():
 				action_file.write(u"#    {}".format(config.get(section, "Url") or config.get(section, "File")) + os.linesep)
 				try:
-					ProcessHostsFile(domain_tree, section, config.get(section, "Url"), config.get(section, "File"), config.getboolean(section, "Keep"), config.get(section, "Encoding"))
+					ProcessHostsFile(domain_tree, section, config.get(section, "Url"), config.get(section, "File"), GetConfigBoolean(config, section, "Keep"), config.get(section, "Encoding"))
 				except UnicodeError as e:
 					SafePrint(u"Codec error ({}): {}".format(e.encoding, e.message or e.reason))
 				except urllib2.HTTPError as e:
