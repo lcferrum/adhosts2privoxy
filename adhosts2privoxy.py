@@ -45,11 +45,13 @@ def WriteActionPatterns(action_file, domains, pattern):
 
 def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 	global in_count
+	global processing_error
 	hosts_path = file
 	hosts_encoding = encoding
-
+	
 	if url:
-		SafePrint(u"Downloading {}...".format(section))
+		processing_error = "DOWNLOAD"
+		SafePrint(u"Downloading \"{}\"...".format(section))
 		
 		# Reasons behind converting back and forth to UTF-8:
 		#   urllib2.quote and urllib.quote_plus choke on non-ASCII characters in unicode objects (any kind of str objects are ok)
@@ -93,14 +95,16 @@ def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 
 	if not hosts_encoding: hosts_encoding = local_encoding
 			
-	SafePrint(u"Processing {}{}...".format(section, "" if codecs.lookup(local_encoding).name == codecs.lookup(hosts_encoding).name else u" ({})".format(codecs.lookup(hosts_encoding).name)))
+	SafePrint(u"Processing \"{}\"{}...".format(section, "" if codecs.lookup(local_encoding).name == codecs.lookup(hosts_encoding).name else u" ({})".format(codecs.lookup(hosts_encoding).name)))
 	
+	processing_error = "FILE"	
 	with codecs.open(hosts_path, "r", hosts_encoding) as hosts:
 		prc_count = 0
 		skp_count = 0
 		hst_count = 0
 		als_count = 0
 		ign_count = 0
+		processing_error = "READ"
 		for line in hosts.readlines():
 			if not re.match(white_pattern, line):
 				line_match = block_pattern.match(line)
@@ -131,6 +135,7 @@ def ProcessHostsFile(domain_tree, section, url, file, keep, encoding):
 					skp_count += 1
 		SafePrint(u"Completed: {} lines processed, {} lines skipped, {} hostnames, {} aliases, {} ignored".format(prc_count, skp_count, hst_count, als_count, ign_count))
 		
+	processing_error = "CLEANUP"		
 	if not keep: os.remove(hosts_path)
 	
 def GetConfigBoolean(config, section, option):
@@ -145,7 +150,7 @@ def GetTimestamp(dt):
 local_encoding = locale.getdefaultlocale()[1] or fallback_encoding
 
 if len(sys.argv) == 1 and not os.path.isfile(config_path):
-	SafePrint(u"Usage: {} [CONFIG [ACTION_FILE [HOSTS_DIR]]]".format(sys.argv[0]))
+	SafePrint(u"Usage: {} [CONFIG [ACTION_FILE [HOSTS_DIR]]]".format(os.path.basename(sys.argv[0])))
 	SafePrint(u"Defaults:\n\tCONFIG      = {}\n\tACTION_FILE = {}\n\tHOSTS_DIR   = {}\n".format(config_path, actions_path, os.getcwd()))
 	SafePrint(u"Copyright (c) 2018 Lcferrum");
 	SafePrint(u"Licensed under BSD 2-Clause License");
@@ -160,8 +165,10 @@ rfc3164_months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
 config = ConfigParser.ConfigParser(config_defaults)
 dt_now = datetime.datetime.now()
 domain_tree = dict()
+delayed_write = list()
 in_count = 0
 out_count = 0
+processing_error = ""
 no_errors = True
 exit_code = 1
 
@@ -173,50 +180,58 @@ try:
 
 	with codecs.open(config_path, "r", local_encoding) as config_file:
 		config.readfp(config_file)
-		with codecs.open(actions_path, "w", local_encoding) as action_file:
-			action_file.write(u"# Action file created on {}".format(GetTimestamp(dt_now)) + os.linesep)
-			action_file.write(u"# Included hosts files:" + os.linesep)
-					
-			if len(sys.argv) > 3:
-				hosts_dir = sys.argv[3].decode(local_encoding)
-				if not os.path.isdir(hosts_dir): raise IOError(errno.ENOENT, "The directory name is invalid", hosts_dir)
-				os.chdir(hosts_dir)
+		
+		if len(sys.argv) > 3:
+			hosts_dir = sys.argv[3].decode(local_encoding)
+			if not os.path.isdir(hosts_dir): raise IOError(errno.ENOENT, "The directory name is invalid", hosts_dir)
+			os.chdir(hosts_dir)
+			
+		delayed_write.append(u"# Action file created on {}".format(GetTimestamp(dt_now)))
+		delayed_write.append(u"# Included hosts files:")
 
-			for section in config.sections():
-				action_file.write(u"#    {}".format(config.get(section, "Url") or config.get(section, "File")) + os.linesep)
-				try:
-					ProcessHostsFile(domain_tree, section, config.get(section, "Url"), config.get(section, "File"), GetConfigBoolean(config, section, "Keep"), config.get(section, "Encoding"))
-				except UnicodeError as e:
-					SafePrint(u"Codec error ({}): {}".format(e.encoding, e.message or e.reason))
-				except urllib2.HTTPError as e:
-					SafePrint(u"Failed to download {}, HTTP error: {} ({})".format(config.get(section, "Url"), e.code, e.reason))
-				except urllib2.URLError as e:
-					SafePrint(u"Failed to download {}, server is not reachable: {}".format(config.get(section, "Url"), e.reason))
-				except httplib.HTTPException as e:
-					SafePrint(u"Failed to download {}: {}".format(config.get(section, "Url"), e.message))
-				except socket.timeout:
-					SafePrint(u"Failed to download {}, timeout exceeded".format(config.get(section, "Url")))
-				except socket.error as e:
-					SafePrint(u"Failed to download {}: {}".format(config.get(section, "Url"), e.strerror))
-				except IOError as e:
-					SafePrint(u"Error while accessing {}: {}".format(e.filename, e.strerror))
-				except ValueError as e:
-					SafePrint(u"Processing error: {}".format(e.message))
-				else:
-					continue
-				no_errors = False
+		for section in config.sections():
+			try:
+				ProcessHostsFile(domain_tree, section, config.get(section, "Url"), config.get(section, "File"), GetConfigBoolean(config, section, "Keep"), config.get(section, "Encoding"))
+				delayed_write.append(u"#    [OK]: {}".format(config.get(section, "Url") or config.get(section, "File")))
+			except UnicodeError as e:
+				SafePrint(u"Codec error ({}): {}".format(e.encoding, e.message or e.reason))
+			except urllib2.HTTPError as e:
+				SafePrint(u"Failed to download \"{}\", HTTP error: {} ({})".format(config.get(section, "Url"), e.code, e.reason))
+			except urllib2.URLError as e:
+				SafePrint(u"Failed to download \"{}\", server is not reachable: {}".format(config.get(section, "Url"), e.reason))
+			except httplib.HTTPException as e:
+				SafePrint(u"Failed to download \"{}\": {}".format(config.get(section, "Url"), e.message))
+			except socket.timeout:
+				SafePrint(u"Failed to download \"{}\", timeout exceeded".format(config.get(section, "Url")))
+			except socket.error as e:
+				SafePrint(u"Failed to download \"{}\": {}".format(config.get(section, "Url"), e.strerror))
+			except (IOError, OSError) as e:
+				SafePrint(u"Error while accessing \"{}\": {}".format(e.filename, e.strerror))
+			except ValueError as e:
+				SafePrint(u"Processing error: {}".format(e.message))
+			else:
+				continue
+			delayed_write.append(u"#    [{} ERROR]: {}".format(processing_error, config.get(section, "Url") or config.get(section, "File")))
+			no_errors = False
+			
+		if not no_errors:
+			delayed_write.append(u"# Due to errors some files were processed only partially or weren't processed at all.")
+			
+		if no_errors or domain_tree:
+			SafePrint(u"Writing action file \"{}\"...".format(actions_path))
+			with codecs.open(actions_path, "w", local_encoding) as action_file:
+				for string in delayed_write: action_file.write(string + os.linesep)
+				action_file.write(os.linesep)
+				action_file.write(privoxy_action + os.linesep)
+				WriteActionPatterns(action_file, domain_tree, "")
+				SafePrint(u"Done!")
 
-			SafePrint(u"Writing action file {}...".format(actions_path))
-			action_file.write(os.linesep)
-			action_file.write(privoxy_action + os.linesep)
-			WriteActionPatterns(action_file, domain_tree, "")
-			SafePrint(u"Done!")
 except ConfigParser.Error as e:
-	SafePrint(u"Malformed config {}".format(e.filename))
+	SafePrint(u"Malformed config \"{}\"".format(e.filename))
 except UnicodeError as e:
 	SafePrint(u"Codec error ({}): {}".format(e.encoding, e.message or e.reason))
 except IOError as e:
-	SafePrint(u"Error while accessing {}: {}".format(e.filename, e.strerror))
+	SafePrint(u"Error while accessing \"{}\": {}".format(e.filename, e.strerror))
 except:
 	SafePrint(u"Unexpected error: {}".format(sys.exc_info()[0]))
 else:
