@@ -172,7 +172,7 @@ processing_error = ""
 no_errors = True
 exit_code = 1
 
-SafePrint(u"Started on {}".format(GetTimestamp(dt_now)))
+SafePrint(u"Started on: {}".format(GetTimestamp(dt_now)))
 
 try:
 	if len(sys.argv) > 1: config_path = sys.argv[1].decode(local_encoding)
@@ -186,7 +186,8 @@ try:
 			if not os.path.isdir(hosts_dir): raise IOError(errno.ENOENT, "The directory name is invalid", hosts_dir)
 			os.chdir(hosts_dir)
 			
-		delayed_write.append(u"# Action file created on {}".format(GetTimestamp(dt_now)))
+		delayed_write.append(u"# Action file created on:")
+		delayed_write.append(u"#    {}".format(GetTimestamp(dt_now)))
 		delayed_write.append(u"# Included hosts files:")
 
 		for section in config.sections():
