@@ -2,7 +2,7 @@ adhosts2privoxy
 
 1. License
 ----------
-Copyright (c) 2018 Lcferrum
+Copyright (c) 2018-2019 Lcferrum
 
 This program comes with no warranty.
 You must use this program at your own risk.
@@ -10,10 +10,10 @@ Licensed under BSD 2-Clause License - see LICENSE file for details.
 
 2. About
 --------
-This Python 2.7 script converts multiple hosts files to single Privoxy action
-file. It has simple built-in download functionality so you can supply web
-address to the script instead of specifying local file path. Script gets
-information about needed hosts files via config file.
+This Python 2.7 script converts multiple hosts files and Adblock filters into
+single Privoxy action file. It has simple built-in download functionality so
+you can supply web address to the script instead of specifying local file path.
+Script gets information about input files via config file.
 
 3. Where to get
 ---------------
@@ -24,27 +24,83 @@ Main project homepage is at GitHub:
 4. Usage
 --------
 On Linux/Mac:
-       ./adhosts2privoxy.py [CONFIG [ACTION_FILE [HOSTS_DIR]]]
+       ./adhosts2privoxy.py [CONFIG [ACTION_FILE [INPUT_DIR]]]
 
 On Windows:
-       python adhosts2privoxy.py [CONFIG [ACTION_FILE [HOSTS_DIR]]]
+       python adhosts2privoxy.py [CONFIG [ACTION_FILE [INPUT_DIR]]]
 
 CONFIG is a relative (to current dir) or absolute path to config file
-containing list of input hosts files (default: 'adhosts2privoxy.conf'). More on
+containing list of input files (default: 'adhosts2privoxy.conf'). More on
 config file in the next section. Config file should have the same encoding as
 current locale. ACTION_FILE is a relative (to current dir) or absolute path to
 resulting Privoxy action file (default: 'hosts.action'). Action file will be
-written using current locale encoding. HOSTS_DIR is a relative (to current dir)
-or absolute path to directory where hosts files are located or will be
+written using current locale encoding. INPUT_DIR is a relative (to current dir)
+or absolute path to directory where input files are located or will be
 downloaded to (defaults to current directory). You can specify absolute path
-for each hosts file in config - in this case, HOSTS_DIR is ignored for such
+for each input file in config - in this case, INPUT_DIR is ignored for such
 files.
 
-Built-in download functionality is good enough for most hosted hosts files on
-the web. It takes in account Content-Disposition and Content-Type headers,
-supports Internationalized Domain Names. But you can always specify local file
-path for hosts file in config, instead of URL, if you don't need to download
-anything or prefer to rely on external download utilities such as Wget or Curl.
+Built-in download functionality is good enough for most hosted hosts files and
+Adblock filters on the web. It takes in account Content-Disposition and
+Content-Type headers, supports Internationalized Domain Names. But you can
+always specify local file path for input file in config, instead of URL, if you
+don't need to download anything or prefer to rely on external download
+utilities such as Wget or Curl.
+
+5. Configuration file
+---------------------
+Configuration file consists of any number of sections, each corresponding to
+input file to be processed. Section starts with '[NAME]' header and followed by
+'VARIABLE: VALUE' or 'VARIABLE=VALUE' entries. Comment lines start with '#' or
+';', inline comments start with ';'. Possible VARIABLEs are: 'Url', 'File',
+'Keep', 'Type' and 'Encoding'. Example config file:
+
+	[Ad Hosts]
+	Url=http://foo.bar/adhosts.txt
+	File=hosts
+	Keep=1
+	Type=hosts
+	Encoding=UTF-8
+	
+Section name is a display name of input file to be processed. It will be used
+in script output. In this example, section name is 'Ad Hosts'. 
+
+'Url' variable holds a web address of input file. 'Url' variable is optional
+and, if it is omitted, local input file will be processed and 'File' variable
+should be set accordingly. In this example, input file will be downloaded from
+'http://foo.bar/adhosts.txt'.
+
+'File' variable contains path where downloaded file will be saved or, in case
+if 'Url' is omitted, path to locally stored input file. 'File' variable is
+optional only when 'Url' is provided: in absence of 'File' variable, input
+filename will be deduced from Content-Disposition header or web address itself.
+'File' contains relative or absolute path. Relative paths (this includes
+automatically deduced filenames of downloaded input files) are calculated
+relative to directory specified in HOSTS_DIR script parameter (which is current
+directory by default). In this example, downloaded input file will be saved in
+current directory under filename 'hosts'. 
+
+By default, after script finishes processing input file, it deletes it. To
+control this behavior 'Keep' variable is used - if it translates to True
+(values 'yes', 'true', 'on' and non-zero decimals), file won't be deleted after
+being processed. If it translates to False (values 'no', 'false', 'off' and
+zero equivalents) or variable is omitted - default action takes place and file
+becomes deleted. In this example, input file won't be deleted after being
+processed.
+
+'Type' variable defines type of the input file. Possible values are: 'hosts'
+for hosts files, 'adblock' for ordinary Adblock filters and 'adblock+hosts' for
+uBlock Origin flavored Adblock filters. 'Type' defaults to 'hosts'.
+
+Input files can have wide variety of encodings. So, when reading input file,
+script uses encoding specified in Content-Type header or in current locale, if
+Content-Type encoding is not available or when input file is stored locally.
+Automatically selected input file encoding can be overridden with 'Encoding'
+variable. In this example, downloaded input file will be read using 'UTF-8'
+encoding.
+
+6. Hosts file processing
+------------------------
 
 When hosts file is processed by the script, it's hostnames (and aliases) become
 patterns for 'block' action in Privoxy action file. Multiple hostnames are
@@ -73,54 +129,26 @@ easily changed in the script source code - they are all initialized in the very
 beginning of the script, hard to miss. Refer to the source code for more
 information on modifying defaults.
 
-5. Configuration file
----------------------
-Configuration file consists of any number of sections, each corresponding to
-hosts file to be processed. Section starts with '[NAME]' header and followed by
-'VARIABLE: VALUE' or 'VARIABLE=VALUE' entries. Comment lines start with '#' or
-';', inline comments start with ';'. Possible VARIABLEs are: 'Url', 'File',
-'Keep' and 'Encoding'. Example config file:
+7. Adblock filter support
+-------------------------
 
-	[Ad Hosts]
-	Url=http://foo.bar/adhosts.txt
-	File=hosts
-	Keep=1
-	Encoding=UTF-8
-	
-Section name is a display name of hosts file to be processed. It will be used
-in script output. In this example, section name is 'Ad Hosts'. 
+Script only processes following Adblock filter rules: '||www.foo.com^' and
+'||www.foo.com'. Type options ('$') may be present but largely ignored by the
+script. The only option that it isn't ignored is 'domain=' option which, if
+present, should contain excluding list of domains ('~') - otherwise, rule will
+be skipped. If uBlock Origin flavored type of Adblock filter is chosen,
+additionally script will process rules like 'www.foo.com'. This behaviour stems
+from the difference in how uBlock Origin and other Adblock clones handle
+non-anchored non-wildcard patterns. While uBlock Origin treats such patterns as
+complete hostname, other Adblock clones treat it like wildcard that can be
+matched anywhere within the address. By using uBlock Origin flavored type,
+plain text files, containing simple list of hostnames, can be processed by the
+script.
 
-'Url' variable holds a web address of hosts file. 'Url' variable is optional
-and, if it is omitted, local hosts file will be processed and 'File' variable
-should be set accordingly. In this example, hosts file will be downloaded from
-'http://foo.bar/adhosts.txt'.
+Hostnames extracted from filter rules are treated the same way as in hosts
+files.
 
-'File' variable contains path where downloaded file will be saved or, in case
-if 'Url' is omitted, path to locally stored hosts file. 'File' variable is
-optional only when 'Url' is provided: in absence of 'File' variable, hosts
-filename will be deduced from Content-Disposition header or web address itself.
-'File' contains relative or absolute path. Relative paths (this includes
-automatically deduced filenames of downloaded hosts files) are calculated
-relative to directory specified in HOSTS_DIR script parameter (which is current
-directory by default). In this example, downloaded hosts file will be saved in
-current directory under filename 'hosts'. 
-
-By default, after script finishes processing hosts file, it deletes it. To
-control this behavior 'Keep' variable is used - if it translates to True
-(values 'yes', 'true', 'on' and non-zero decimals), file won't be deleted after
-being processed. If it translates to False (values 'no', 'false', 'off' and
-zero equivalents) or variable is omitted - default action takes place and file
-becomes deleted. In this example, hosts file won't be deleted after being
-processed.
-
-Hosts files can have wide variety of encodings. So, when reading hosts file,
-script uses encoding specified in Content-Type header or in current locale, if
-Content-Type encoding is not available or when hosts file is stored locally.
-Automatically selected hosts file encoding can be overridden with 'Encoding'
-variable. In this example, downloaded hosts file will be read using 'UTF-8'
-encoding.
-
-6. Usage example
+8. Usage example
 ----------------
 
 Let's say, you need to turn two web hosted hosts files to Privoxy action file.
