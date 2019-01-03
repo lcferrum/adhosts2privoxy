@@ -57,7 +57,7 @@ input file to be processed. Section starts with '[NAME]' header and followed by
 
 	[Ad Hosts]
 	Url=http://foo.bar/adhosts.txt
-	File=hosts
+	File=ad_hosts
 	Keep=1
 	Type=hosts
 	Encoding=UTF-8
@@ -78,7 +78,7 @@ filename will be deduced from Content-Disposition header or web address itself.
 automatically deduced filenames of downloaded input files) are calculated
 relative to directory specified in HOSTS_DIR script parameter (which is current
 directory by default). In this example, downloaded input file will be saved in
-current directory under filename 'hosts'. 
+current directory under filename 'ad_hosts'. 
 
 By default, after script finishes processing input file, it deletes it. To
 control this behavior 'Keep' variable is used - if it translates to True
@@ -90,7 +90,8 @@ processed.
 
 'Type' variable defines type of the input file. Possible values are: 'hosts'
 for hosts files, 'adblock' for ordinary Adblock filters and 'adblock+hosts' for
-uBlock Origin flavored Adblock filters. 'Type' defaults to 'hosts'.
+uBlock Origin flavored Adblock filters. 'Type' defaults to 'hosts'. In this
+example, input file type is hosts file.
 
 Input files can have wide variety of encodings. So, when reading input file,
 script uses encoding specified in Content-Type header or in current locale, if
