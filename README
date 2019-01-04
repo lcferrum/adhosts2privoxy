@@ -125,11 +125,6 @@ IPs. Only following IPs are considered "blocking": whole 127.0.0.0/8 network
 (incl. 127.0.0.1), 0.0.0.0, ::1, ::. Also, typical "loopback" and "localhost"
 hostnames are ignored.
 
-Some of the defaults and predefined values, mentioned in this section, can be
-easily changed in the script source code - they are all initialized in the very
-beginning of the script, hard to miss. Refer to the source code for more
-information on modifying defaults.
-
 7. Adblock filter support
 -------------------------
 
