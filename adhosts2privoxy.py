@@ -97,7 +97,7 @@ def ReadAdblockScript(domain_tree, adblock, hosts):
 			if hosts and not line_match:
 				bas = True
 				line_match = script_basic_pattern.match(line)
-			hostname = line_match and line_match.group(1) and ('_' not in line_match.group(1)) and (True if bas or not line_match.group(6) else line_match.group(6).startswith("domain=~")) and line_match.group(1).strip().lower()
+			hostname = line_match and line_match.group(1) and ('_' not in line_match.group(1)) and (True if bas or not line_match.group(7) else line_match.group(7).startswith("domain=~") and line_match.group(7).count('~') == line_match.group(7).count('|') + 1) and line_match.group(1).strip().lower()
 			if hostname and not script_ipv4_pattern.match(hostname):
 				prc_count += 1
 				if hostname not in ignored_hostnames:
@@ -216,7 +216,7 @@ if len(sys.argv) == 1 and not os.path.isfile(config_path):
 hosts_block_pattern = re.compile("^\s*(0+\.0+\.0+\.0+|127\.\d+\.\d+\.\d+|(0{0,4}:){1,7}(0{0,4}|0{0,3}1))((\s+([\w]([\w-]*[\w])?\.)*[\w]([\w-]*[\w])?)+)\s*(#.*)?$", re.UNICODE)
 hosts_white_pattern = re.compile("^\s*#.*$|^\s*$")
 script_basic_pattern = re.compile("^(([\w]([\w-]*[\w])?\.)*[\w]([\w-]*[\w])?)\s*$", re.UNICODE)
-script_anchored_pattern = re.compile("^\|\|(([\w]([\w-]*[\w])?\.)*[\w]([\w-]*[\w])?)\^?(\$[^\$]*?(domain=.+)?|\s*)$", re.UNICODE)
+script_anchored_pattern = re.compile("^\|\|(([\w]([\w-]*[\w])?\.)*[\w]([\w-]*[\w])?)(\||\^)?(\$[^\$]*?(domain=.+)?|\s*)$", re.UNICODE)
 script_ipv4_pattern = re.compile("^\d+\.\d+\.\d+\.\d+$")
 script_white_pattern = re.compile("^\s*!.*$|^\s*$")
 encoding_pattern = re.compile("^([^']+)'[\w-]*'(.+)")

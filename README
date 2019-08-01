@@ -128,18 +128,18 @@ hostnames are ignored.
 7. Adblock filter support
 -------------------------
 
-Script only processes following Adblock filter rules: '||www.foo.com^' and
-'||www.foo.com'. Type options ('$') may be present but largely ignored by the
-script. The only option that it isn't ignored is 'domain=' option which, if
-present, should contain excluding list of domains ('~') - otherwise, rule will
-be skipped. If uBlock Origin flavored type of Adblock filter is chosen,
-additionally script will process rules like 'www.foo.com'. This behaviour stems
-from the difference in how uBlock Origin and other Adblock clones handle
-non-anchored non-wildcard patterns. While uBlock Origin treats such patterns as
-complete hostname, other Adblock clones treat it like wildcard that can be
-matched anywhere within the address. By using uBlock Origin flavored type,
-plain text files, containing simple list of hostnames, can be processed by the
-script.
+Script only processes following Adblock filter rules: '||www.foo.com^',
+'||www.foo.com|' and '||www.foo.com'. Type options ('$') may be present but
+largely ignored by the script. The only option that it isn't ignored is
+'domain=' option which, if present, should contain excluding list of domains
+('~') - otherwise, rule will be skipped. If uBlock Origin flavored type of
+Adblock filter is chosen, additionally script will process rules like
+'www.foo.com'. This behaviour stems from the difference in how uBlock Origin
+and other Adblock clones handle non-anchored non-wildcard patterns. While
+uBlock Origin treats such patterns as complete hostname, other Adblock clones
+treat it like wildcard that can be matched anywhere within the address. By
+using uBlock Origin flavored type, plain text files, containing simple list of
+hostnames, can be processed by the script.
 
 Hostnames extracted from filter rules are treated the same way as in hosts
 files.
