@@ -89,9 +89,10 @@ becomes deleted. In this example, input file won't be deleted after being
 processed.
 
 'Type' variable defines type of the input file. Possible values are: 'hosts'
-for hosts files, 'adblock' for ordinary Adblock filters and 'adblock+hosts' for
-uBlock Origin flavored Adblock filters. 'Type' defaults to 'hosts'. In this
-example, input file type is hosts file.
+for hosts files, 'adblock' for ordinary Adblock filters, 'adblock+hosts' for
+uBlock Origin flavored Adblock filters and 'auto' for type auto-detection.
+Note that 'adblock+hosts' type can't be auto-detected. 'Type' defaults to
+'auto'. In this example, input file type is hosts file.
 
 Input files can have wide variety of encodings. So, when reading input file,
 script uses encoding specified in Content-Type header or in current locale, if
@@ -147,19 +148,19 @@ files.
 8. Usage example
 ----------------
 
-Let's say, you need to turn two web hosted hosts files to Privoxy action file.
-First hosts file is at 'http://foo.bar/hosts1.txt', second one is at
-'http://foo.baz/hosts2.txt'. For this purpose, config file can be as simple as
+Let's say, you need to turn web hosted hosts file and Adblock filter to Privoxy
+action file. Hosts file is at 'http://foo.bar/hosts.txt', Adblock filter is at
+'http://foo.baz/easylist.txt'. For this purpose, config file can be as simple as
 this:
 
-	[First File]
-	Url=http://foo.bar/hosts1.txt
+	[Hosts file]
+	Url=http://foo.bar/hosts.txt
 	
-	[Second File]
-	Url=http://foo.baz/hosts2.txt
+	[Adblock filter]
+	Url=http://foo.baz/easylist.txt
 	
 Save this config as 'adhosts2privoxy.conf' in the same directory where
 adhosts2privoxy script is located. Then just run the script from this directory
 without any additional parameters. Resulting Privoxy action file 'hosts.action'
-will be created in the same directory. Downloaded hosts files won't be kept and
-will be deleted after processing.
+will be created in the same directory. Downloaded files won't be kept and will
+be deleted after processing.

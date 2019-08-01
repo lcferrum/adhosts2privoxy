@@ -23,7 +23,7 @@ import ConfigParser
 # So it's actually better to set proper POSIX locale environment variables, instead of changing this default
 
 ignored_hostnames = ["localhost4.localdomain4", "localhost4", "loopback4", "localhost6.localdomain6", "localhost6", "loopback6", "localhost.localdomain", "localhost", "local", "loopback", "ip6-localhost.ip6-localdomain", "ip6-localhost", "ip6-loopback"]
-config_defaults = {"Url": "", "File": "", "Keep": "False", "Type": "hosts", "Encoding": ""}
+config_defaults = {"Url": "", "File": "", "Keep": "False", "Type": "auto", "Encoding": ""}
 user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 privoxy_action = "{+block{Blocked advertisement hostname.} +handle-as-image +set-image-blocker{blank}}"
 config_path = "adhosts2privoxy.conf"
@@ -168,13 +168,21 @@ def ProcessFile(domain_tree, section, url, file, keep, type, encoding):
 	if not hosts_encoding: hosts_encoding = local_encoding
 	
 	processing_error = "TYPE"
-	if type.lower() == "hosts":
+	if type == "auto":
+		with codecs.open(hosts_path, "r", hosts_encoding) as header:
+			if re.match(script_header_pattern, header.readline()):
+				read_function = lambda hosts : ReadAdblockScript(domain_tree, hosts, False)
+				type_name = "Adblock filter"
+			else:
+				read_function = lambda hosts : ReadHostsFile(domain_tree, hosts)
+				type_name = "hosts file"
+	elif type == "hosts":
 		read_function = lambda hosts : ReadHostsFile(domain_tree, hosts)
 		type_name = "hosts file"
-	elif type.lower() == "adblock":
+	elif type == "adblock":
 		read_function = lambda hosts : ReadAdblockScript(domain_tree, hosts, False)
 		type_name = "Adblock filter"
-	elif type.lower() == "adblock+hosts":
+	elif type == "adblock+hosts":
 		read_function = lambda hosts : ReadAdblockScript(domain_tree, hosts, True)
 		type_name = "Adblock filter w/ hosts"
 	else:
@@ -213,10 +221,11 @@ if len(sys.argv) == 1 and not os.path.isfile(config_path):
 # Block pattern conforms (in a sane way) to RFC 4291, ID draft-main-ipaddr-text-rep-02 and RFC 1123
 # Basic and anchored patterns conform (in a sane way) to RFC 1123
 	
-hosts_block_pattern = re.compile("^\s*(0+\.0+\.0+\.0+|127\.\d+\.\d+\.\d+|(0{0,4}:){1,7}(0{0,4}|0{0,3}1))((\s+([\w]([\w-]*[\w])?\.)*[\w]([\w-]*[\w])?)+)\s*(#.*)?$", re.UNICODE)
+hosts_block_pattern = re.compile("^\s*(0+\.0+\.0+\.0+|127\.\d+\.\d+\.\d+|(0{0,4}:){1,7}(0{0,4}|0{0,3}1))((\s+([\w]([\w-]*[\w])?\.)*[\w]([\w-]*[\w])?)+)\s*(#.*)?$", re.U)
 hosts_white_pattern = re.compile("^\s*#.*$|^\s*$")
-script_basic_pattern = re.compile("^(([\w]([\w-]*[\w])?\.)*[\w]([\w-]*[\w])?)\s*$", re.UNICODE)
-script_anchored_pattern = re.compile("^\|\|(([\w]([\w-]*[\w])?\.)*[\w]([\w-]*[\w])?)(\||\^)?(\$[^\$]*?(domain=.+)?|\s*)$", re.UNICODE)
+script_header_pattern = re.compile("\[(Adblock(?:\s*Plus\s*[\d\.]+?)?)\]", re.I)
+script_basic_pattern = re.compile("^(([\w]([\w-]*[\w])?\.)*[\w]([\w-]*[\w])?)\s*$", re.U)
+script_anchored_pattern = re.compile("^\|\|(([\w]([\w-]*[\w])?\.)*[\w]([\w-]*[\w])?)(\||\^)?(\$[^\$]*?(domain=.+)?|\s*)$", re.U|re.I)
 script_ipv4_pattern = re.compile("^\d+\.\d+\.\d+\.\d+$")
 script_white_pattern = re.compile("^\s*!.*$|^\s*$")
 encoding_pattern = re.compile("^([^']+)'[\w-]*'(.+)")
@@ -251,7 +260,7 @@ try:
 
 		for section in config.sections():
 			try:
-				ProcessFile(root_domain_tree, section, config.get(section, "Url"), config.get(section, "File"), GetConfigBoolean(config, section, "Keep"), config.get(section, "Type"), config.get(section, "Encoding"))
+				ProcessFile(root_domain_tree, section, config.get(section, "Url"), config.get(section, "File"), GetConfigBoolean(config, section, "Keep"), config.get(section, "Type").lower(), config.get(section, "Encoding"))
 				delayed_write.append(u"#    [OK]: {}".format(config.get(section, "Url") or config.get(section, "File")))
 			except UnicodeError as e:
 				SafePrint(u"Codec error{}: {}".format(" ({})".format(e.encoding) if hasattr(e, "encoding") else "", e.message or e.reason))
